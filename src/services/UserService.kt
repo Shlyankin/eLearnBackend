@@ -1,6 +1,7 @@
 package com.elearn.services
 
 import com.elearn.models.*
+import kotlinx.css.em
 import kotlinx.html.InputType
 
 class UserService {
@@ -32,6 +33,13 @@ class UserService {
             users[position].password = u.password
             return users[position]
         }
+    }
+
+    suspend fun signIn(email: String, password: String): Boolean {
+        for (user in users) {
+            if (user.email == email && user.password == password) return true
+        }
+        return false
     }
 
     suspend fun new(u: User): User {

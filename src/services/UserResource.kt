@@ -12,6 +12,7 @@ import io.ktor.response.respond
 import io.ktor.routing.*
 import io.ktor.http.cio.websocket.*
 import io.ktor.websocket.webSocket
+import org.apache.http.HttpStatus
 
 /*
 
@@ -66,6 +67,18 @@ fun Route.widget(userService: UserService){
             }
         }
 
+        post("/signin/{email}&{password}") {
+            val result: Boolean = userService.signIn(
+                call.parameters["email"].toString(),
+                call.parameters["password"].toString())
+            if (result) {
+                call.respond(HttpStatusCode.OK)
+            }
+            else {
+                call.respond(HttpStatusCode.NotFound)
+            }
+        }
+
         post("/") {
             val u = call.receive<User>()
             call.respond(HttpStatusCode.Created, userService.new(u))
@@ -86,5 +99,7 @@ fun Route.widget(userService: UserService){
             if (removed) call.respond(HttpStatusCode.OK)
             else call.respond(HttpStatusCode.NotFound)
         }
+
+
     }
 }
