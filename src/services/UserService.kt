@@ -1,24 +1,33 @@
 package com.elearn.services
 
 import com.elearn.models.*
-import kotlinx.css.em
-import kotlinx.html.InputType
+import java.util.*
+import kotlin.collections.ArrayList
 
 class UserService {
 
     private val users = ArrayList<User>()
 
-    private fun getUserPosition(id: Int): Int? {
+    private fun getUserPositionById(id: String): Int? {
         for (i in 0 until users.size)
             if (users[i].id == id)
                 return i
         return null
     }
+
+    private fun getUserPositionByEmail(email: String): Int? {
+        for (i in 0 until users.size)
+            if (users[i].email == email)
+                return i
+        return null
+    }
+
     suspend fun all(): List<User> = users
 
-    suspend fun getUser(id: Int): User? {
-        val position: Int? = getUserPosition(id)
-        return if(position != null) users[position] else return null
+    suspend fun getUser(id: String): User? {
+        val position: Int? = getUserPositionById(id)
+        return if(position != null) users[position]
+        else return null
     }
 
     suspend fun update(u: User): User? {
@@ -26,7 +35,7 @@ class UserService {
         if (id == null) {
             return new(u)
         } else {
-            val position: Int = getUserPosition(id) ?: return new(u)
+            val position: Int = getUserPositionById(id) ?: return new(u)
             users[position].address = u.address
             users[position].country = u.country
             users[position].email = u.email
@@ -35,21 +44,25 @@ class UserService {
         }
     }
 
-    suspend fun signIn(email: String, password: String): Boolean {
+    suspend fun signIn(email: String, password: String): User? {
         for (user in users) {
-            if (user.email == email && user.password == password) return true
+            if (user.email == email && user.password == password)
+                return user
         }
-        return false
+        return null
     }
 
-    suspend fun new(u: User): User {
-        u.id = users.size
+    suspend fun new(u: User): User? {
+        getUserPositionByEmail(u.email)?.let {
+            return null
+        }
+        u.id = UUID.randomUUID().toString()
         users.add(u)
         return u
     }
 
-    suspend fun delete(id: Int): Boolean {
-        val position: Int? = getUserPosition(id)
+    suspend fun delete(id: String): Boolean {
+        val position: Int? = getUserPositionById(id)
         return if(position != null) {
             users.removeAt(position)
             true

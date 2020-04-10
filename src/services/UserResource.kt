@@ -50,56 +50,64 @@ return: status
 
  */
 
-const val WIDGET_END_POINT = "/user"
-val mapper = jacksonObjectMapper().apply { setSerializationInclusion(JsonInclude.Include.NON_NULL) }
 
 fun Route.widget(userService: UserService){
+    val WIDGET_END_POINT_USER = "/user"
+    val mapper = jacksonObjectMapper().apply { setSerializationInclusion(JsonInclude.Include.NON_NULL) }
 
-    route(WIDGET_END_POINT){
+    route(WIDGET_END_POINT_USER){
         get("/"){ call.respond(userService.all()) }
 
         get("/{id}"){
-            val widget = userService.getUser(call.parameters["id"]?.toInt()!!)
-            if (widget == null){
-                call.respond(HttpStatusCode.NotFound)
+            val user = userService.getUser(call.parameters["id"]?.toString()!!)
+            if (user == null){
+                call.respond(false)
             }else{
-                call.respond(widget)
+                call.respond(user)
             }
         }
 
-        post("/signin/{email}&{password}") {
-            val result: Boolean = userService.signIn(
+        post("/signin") {
+            val user: User? = userService.signIn(
                 call.parameters["email"].toString(),
                 call.parameters["password"].toString())
-            if (result) {
-                call.respond(HttpStatusCode.OK)
+            if (user != null) {
+                call.respond(user)
             }
             else {
-                call.respond(HttpStatusCode.NotFound)
+                call.respond(false)
             }
         }
 
         post("/") {
-            val u = call.receive<User>()
-            call.respond(HttpStatusCode.Created, userService.new(u))
+            val user: User = call.receive<User>()
+            val created: User? = userService.new(user)
+            if (created == null) {
+                call.respond(false)
+            }
+            else {
+                call.respond(HttpStatusCode.Created, created)
+            }
         }
 
         put("/") {
             val u = call.receive<User>()
             val updated = userService.update(u)
             if(updated == null){
-                call.respond(HttpStatusCode.NotFound)
+                call.respond(false)
             } else {
                 call.respond(HttpStatusCode.OK, updated)
             }
         }
 
         delete("/{id}") {
-            val removed: Boolean = userService.delete(call.parameters["id"]?.toInt()!!)
-            if (removed) call.respond(HttpStatusCode.OK)
-            else call.respond(HttpStatusCode.NotFound)
+            val removed: Boolean = userService.delete(call.parameters["id"]?.toString()!!)
+            if (removed) {
+                call.respond(HttpStatusCode.OK)
+            }
+            else {
+                call.respond(false)
+            }
         }
-
-
     }
 }

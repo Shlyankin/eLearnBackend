@@ -1,5 +1,6 @@
 package com.elearn
 
+import com.elearn.services.CourseService
 import com.elearn.services.UserService
 import com.elearn.services.widget
 import io.ktor.application.*
@@ -26,6 +27,15 @@ fun Application.module(testing: Boolean = false) {
     install(ContentNegotiation){
         jackson { configure(SerializationFeature.INDENT_OUTPUT,true)}
     }
-    install(Routing){ widget(userService = UserService()) }
-
+    install(CORS) {
+        anyHost()
+        method(HttpMethod.Options)
+        header(HttpHeaders.XForwardedProto)
+        allowCredentials = true
+        allowNonSimpleContentTypes = true
+    }
+    install(Routing){
+        widget(userService = UserService())
+        widget(courseService = CourseService())
+    }
 }
